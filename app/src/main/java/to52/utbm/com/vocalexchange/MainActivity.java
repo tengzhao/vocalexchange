@@ -24,20 +24,97 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+import to52.utbm.com.vocalexchange.dbutil.HistoryActivity;
 import to52.utbm.com.vocalexchange.dbutil.QuestionAnswer;
 
 public class MainActivity extends AppCompatActivity{
-    private String TAG = "debug";
+    private String TAG = "debugMain";
     public static final String KEY_PARAM_UTTERANCE_ID = "speak";
     private EditText mAnswer,mQuestion;
-    private Button speech,record,change;
+    private Button speech,change,history;
     private TextToSpeech textToSpeech;
     private int countQuestion;
     private HashMap<String,String> hashMap;
-    private abstract class runnable implements Runnable {
-    }
     private final int REQUEST_SPEECH_RECOGNIZER = 666;
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+      /*  LitePal.deleteAll(QuestionAnswer.class,null);
+        List<QuestionAnswer> qaL = LitePal.findAll(QuestionAnswer.class);
+        Log.i(TAG+"delete",Boolean.toString(qaL.isEmpty()));*/
+        initializeQuestion();
+        //checkPermission();
+      //  askAllRequiredPermissions();
+        mQuestion = findViewById(R.id.question);
+        mAnswer = findViewById(R.id.answer);
+
+        final List<QuestionAnswer> qaList = LitePal.findAll(QuestionAnswer.class);
+        mQuestion.setText( qaList.get(0).getQuestion());
+
+        //////////////////initializaTextToSpeech/////////////////
+        textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == textToSpeech.SUCCESS) {
+                    Locale locale = getResources().getConfiguration().locale;
+                    String lan = locale.getLanguage();
+                    Log.i("Lan",lan);
+                    int result = textToSpeech.setLanguage(Locale.FRENCH);
+                    if (result != TextToSpeech.LANG_COUNTRY_AVAILABLE
+                            && result != TextToSpeech.LANG_AVAILABLE){
+                        Toast.makeText(MainActivity.this, "Langage non supporte",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        });
+        //////////////////////////////////////////////////////////
+
+        history = findViewById(R.id.histroy);
+        history.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, HistoryActivity.class);
+                startActivity(intent);
+            }
+        });
+
+
+
+        ///////////////////////////////////////////////////////////
+        speech = findViewById(R.id.speech);
+        speech.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startSpeaking();
+            }
+        });
+
+        change = findViewById(R.id.change);
+        change.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                countQuestion++;
+                if(countQuestion>=qaList.size()){
+                    countQuestion = 0;
+                }
+                mQuestion.setText(qaList.get(countQuestion).getQuestion());
+            }
+        });
+    }
+
+    //text to speech, app speaking
+    private void startSpeaking(){
+        hashMap = new HashMap<String,String>();
+        hashMap.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID,KEY_PARAM_UTTERANCE_ID);
+        textToSpeech.setOnUtteranceProgressListener(utteranceProgressListener);
+        textToSpeech.speak(mQuestion.getText().toString(),
+                TextToSpeech.QUEUE_ADD, hashMap);
+    }
+
+    //after app speaking,listening to user
     UtteranceProgressListener utteranceProgressListener = new UtteranceProgressListener() {
         @Override
         public void onStart(String utteranceId) {
@@ -52,105 +129,27 @@ public class MainActivity extends AppCompatActivity{
 
         @Override
         public void onError(String utteranceId) {
-
         }
     };
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-      /*  LitePal.deleteAll(QuestionAnswer.class,null);
-        List<QuestionAnswer> qaL = LitePal.findAll(QuestionAnswer.class);
-        Log.i(TAG+"delete",Boolean.toString(qaL.isEmpty()));*/
-        initializeQuestion();
-        //checkPermission();
-      //  askAllRequiredPermissions();
-
-
-        mAnswer = findViewById(R.id.answer);
-        mQuestion = findViewById(R.id.question);
-
-        final List<QuestionAnswer> qaList = LitePal.findAll(QuestionAnswer.class);
-        mQuestion.setText( qaList.get(0).getQuestion());
-
-        change = findViewById(R.id.change);
-        change.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                countQuestion++;
-                if(countQuestion>=qaList.size()){
-                    countQuestion = 0;
-                }
-                mQuestion.setText(qaList.get(countQuestion).getQuestion());
-            }
-        });
-
-        textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if (status == textToSpeech.SUCCESS) {
-                    Locale locale = getResources().getConfiguration().locale;
-                    String lan = locale.getLanguage();
-                    Log.i("Lan",lan);
-                    int result = textToSpeech.setLanguage(Locale.FRENCH);
-                    if (result != TextToSpeech.LANG_COUNTRY_AVAILABLE
-                            && result != TextToSpeech.LANG_AVAILABLE){
-                        Toast.makeText(MainActivity.this, "TTS暂时不支持这种语音的朗读！",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }
-        });
-
-
-        speech = findViewById(R.id.speech);
-
-        speech.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-             startSpeaking();
-            }
-        });
-
-    }
-
-    //speech to text
+    //speech to text, user speaking
     private void startSpeechRecognizer() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT,
-                "Je vous ecoute");
+                "Je vous écoute ");
         try {
             startActivityForResult(intent, 666);
         } catch (ActivityNotFoundException a) {
             Toast.makeText(getApplicationContext(),
-                    "Sorry! Speech recognition is not supported in this device.",
+                    "Désolé,reconnaissance vocale non supporte ",
                     Toast.LENGTH_SHORT).show();
         }
     }
 
-   @Override
-    protected void onDestroy() {
-        if (textToSpeech != null)
-            textToSpeech.shutdown();
-        super.onDestroy();
-        Log.i("test","ondestroy called");
-    }
-
-
-    private static boolean hasPermissions(Context context, String... permissions) {
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
-            for (String permission : permissions) {
-                if (context.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+    //update UI, display the user's words
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -166,7 +165,7 @@ public class MainActivity extends AppCompatActivity{
                     qa.updateAll("question = ? ",mQuestion.getText().toString());
                     List<QuestionAnswer> qaList = LitePal.findAll(QuestionAnswer.class);
                     Log.i(TAG + "testDB",qaList.toString());
-                  //  startSpeaking();
+                    //  startSpeaking();
                 }
                 else{
                     Log.i(TAG,Integer.toString(resultCode));
@@ -176,13 +175,26 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-    private void startSpeaking(){
-        hashMap = new HashMap<String,String>();
-        hashMap.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID,KEY_PARAM_UTTERANCE_ID);
-        textToSpeech.setOnUtteranceProgressListener(utteranceProgressListener);
-        textToSpeech.speak(mQuestion.getText().toString(),
-                TextToSpeech.QUEUE_ADD, hashMap);
+
+   @Override
+    protected void onDestroy() {
+        if (textToSpeech != null)
+            textToSpeech.shutdown();
+        super.onDestroy();
+        Log.i("test","ondestroy called");
     }
+
+    private static boolean hasPermissions(Context context, String... permissions) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (context.checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 
     private void initializeQuestion(){
         LitePal.getDatabase();
