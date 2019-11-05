@@ -24,7 +24,6 @@
             android:name=".dbutil.HistoryActivity"
             android:parentActivityName=".MainActivity">
         </activity>
-
     </application>
 
 </manifest>

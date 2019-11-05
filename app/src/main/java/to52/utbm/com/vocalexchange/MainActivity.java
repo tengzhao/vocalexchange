@@ -16,6 +16,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.litepal.LitePal;
 
 import java.util.ArrayList;
@@ -23,6 +25,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import to52.utbm.com.vocalexchange.dbutil.HistoryActivity;
 import to52.utbm.com.vocalexchange.dbutil.QuestionAnswer;
@@ -35,7 +39,7 @@ public class MainActivity extends AppCompatActivity{
     private TextToSpeech textToSpeech;
     private int countQuestion;
     private HashMap<String,String> hashMap;
-    private final int REQUEST_SPEECH_RECOGNIZER = 666;
+    private String serverIp =  "192.168.1.11";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +75,6 @@ public class MainActivity extends AppCompatActivity{
             }
         });
         //////////////////////////////////////////////////////////
-
         history = findViewById(R.id.histroy);
         history.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,8 +83,6 @@ public class MainActivity extends AppCompatActivity{
                 startActivity(intent);
             }
         });
-
-
 
         ///////////////////////////////////////////////////////////
         speech = findViewById(R.id.speech);
@@ -165,7 +166,7 @@ public class MainActivity extends AppCompatActivity{
                     qa.updateAll("question = ? ",mQuestion.getText().toString());
                     List<QuestionAnswer> qaList = LitePal.findAll(QuestionAnswer.class);
                     Log.i(TAG + "testDB",qaList.toString());
-                    //  startSpeaking();
+                     startSpeaking();
                 }
                 else{
                     Log.i(TAG,Integer.toString(resultCode));
@@ -174,7 +175,6 @@ public class MainActivity extends AppCompatActivity{
             }
         }
     }
-
 
    @Override
     protected void onDestroy() {
@@ -195,9 +195,48 @@ public class MainActivity extends AppCompatActivity{
         return true;
     }
 
-
     private void initializeQuestion(){
-        LitePal.getDatabase();
+        /*ConnectionMysql connectionMysql = new ConnectionMysql(MainActivity.this);
+        connectionMysql.execute("");
+        Log.i(TAG,"initialize MySQL");
+*/    /*  Map<String, String> token = new HashMap<>();
+        token.put("token", "synchronize");
+        JSONArray jsonArray = synchroDb(token,serverIp);
+*/
+        Map<String, String> synchroDb = new HashMap<>();
+        synchroDb.put("synchronize", "true");
+        JSONArray jsonArray = synchroDb(synchroDb,serverIp);
+
+
+        if (jsonArray==null){
+            LitePal.getDatabase();
+            Toast.makeText(MainActivity.this, "Synchrnoze failed, service not aviable",
+                    Toast.LENGTH_SHORT).show();
+        }
+        else{
+            List<String> qList = new ArrayList<String>();
+            try{
+                for(int i =0; i<jsonArray.length();i++){
+                    qList.add(jsonArray.getString(i));
+                }
+            }catch(JSONException e) {
+                e.printStackTrace();
+            }
+            LitePal.getDatabase();
+            LitePal.deleteAll(QuestionAnswer.class,"");
+
+            //List<String> qList = new ArrayList<String>();
+            //qList.add(json);
+            //List<String> qList = Arrays.asList(json.split(","));
+            //if (qaList.isEmpty()){
+            for(int i =0; i<qList.size();i++){
+                QuestionAnswer qa = new QuestionAnswer();
+                qa.setQuestion(qList.get(i));
+                qa.save();
+            }
+        }
+
+       /* LitePal.getDatabase();
         List<String> qList = new ArrayList<String>();
         qList.add("Vous êtes fatigué?");
         qList.add("Vous êtes en forme?");
@@ -205,13 +244,35 @@ public class MainActivity extends AppCompatActivity{
         qList.add("Vous avez fait du sport?");
         qList.add("Vous vous sentez bien?");
         List<QuestionAnswer> qaList = LitePal.findAll(QuestionAnswer.class);
-        if (qaList.isEmpty()){
+        //if (qaList.isEmpty()){
             for(int i =0; i<qList.size();i++){
                 QuestionAnswer qa = new QuestionAnswer();
                 qa.setQuestion(qList.get(i));
                 qa.save();
+            }*/
+        //}
+    }
+
+    public JSONArray synchroDb(Map<String, String> token, String serverIP) {
+        try {
+            String serverurl = "http://" + serverIP + "/androidMysql/receiveToken.php";
+            SendToServer SendFcmtoken = new SendToServer(token, serverurl);
+            String result = SendFcmtoken.execute().get();
+            if(result==null)
+                return null;
+            else{
+                JSONArray jsonArray = new JSONArray(result);
+                Log.i(TAG, jsonArray.length()+"");
+                return jsonArray;
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+        return null;
     }
 
 }
