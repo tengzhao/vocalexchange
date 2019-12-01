@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public class QuestionAnswer extends LitePalSupport {
     private String question;
-    @Column(defaultValue = " ")
+   // @Column(defaultValue = " ")
     private String answer;
 
     public String getQuestion() {

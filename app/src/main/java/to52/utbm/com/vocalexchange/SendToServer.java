@@ -85,7 +85,6 @@ public class SendToServer  extends AsyncTask<String, String, String> {
         }catch (Exception e){
             Log.i(TAG, e.toString());
         } finally {
-
             http.disconnect();
         }
         return null;

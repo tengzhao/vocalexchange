@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
-    <Button
+   <!-- <Button
         android:id="@+id/histroy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="right"
-        android:text="Statistique" />
+        android:text="Statistique" />-->
+
+    <TextView
+        android:id="@+id/notification"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text = "notification"/>
 
     <LinearLayout
         android:layout_marginTop="10dp"
@@ -19,16 +25,23 @@
         android:orientation="horizontal">
         <Button
             android:id="@+id/speech"
-            android:text="Speech"
+            android:text="reecoutez"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
         <Button
             android:id="@+id/change"
-            android:text="Changer question"
+            android:text="suivant"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
+        <Button
+            android:id="@+id/save"
+            android:text="save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"/>
     </LinearLayout>
-    <LinearLayout
+
+   <!-- <LinearLayout
         android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -43,13 +56,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text= "question"/>
-    </LinearLayout>
+    </LinearLayout>-->
    <!-- <Button
         android:id="@+id/listen"
         android:text="Start Linstening"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>-->
-    <LinearLayout
+   <!-- <LinearLayout
         android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -63,6 +76,19 @@
         android:layout_marginTop="20dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-    </LinearLayout>
+    </LinearLayout>-->
+    <!--<Button
+        android:id="@+id/buttonTest"
+        android:text="Test"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>-->
+  <!--  <include layout="@layout/item_result"/>-->
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        />
+
 
 </LinearLayout>
