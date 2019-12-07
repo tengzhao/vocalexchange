@@ -32,8 +32,11 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.litepal.LitePal;
 
 import java.util.ArrayList;
@@ -249,6 +252,10 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
                    // List<QuestionAnswer> qaList = LitePal.findAll(QuestionAnswer.class);
                     qaList = LitePal.findAll(QuestionAnswer.class);
                     Log.i(TAG + "testDB",qaList.toString());
+                  /*  JSONArray jsArray = new JSONArray(qaList);
+                    Log.i(TAG + "testDBjsonArray",jsArray.toString());*/
+                    String json = new Gson().toJson(qaList);
+                    Log.i(TAG + "testDBGson",json);
                   /*  inttext = 2;
                     Log.i(TAG + "inttext",Integer.toString(inttext));*/
                     //mAdapter.addResult(mQuestion.getText().toString()+"\n"+textResult);
@@ -457,7 +464,7 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
 
     public JSONArray getQuestionsFromServer(Map<String, String> token, String serverIP) {
         try {
-            String serverurl = "http://" + serverIP + "/androidMysql/receiveToken.php";
+            String serverurl = "http://" + serverIP + "/androidMysql/synchroDb.php";
             SendToServer SendFcmtoken = new SendToServer(token, serverurl);
             String result = SendFcmtoken.execute().get();
             if(result==null)
@@ -620,8 +627,25 @@ public class MainActivity extends AppCompatActivity implements MessageDialogFrag
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 //finish();
-                                Toast.makeText(getApplicationContext(),"you choose yes action for save",
-                                        Toast.LENGTH_SHORT).show();
+                                qaList = LitePal.findAll(QuestionAnswer.class);
+                                Log.i(TAG + "testDB",qaList.toString());
+                  /*  JSONArray jsArray = new JSONArray(qaList);
+                    Log.i(TAG + "testDBjsonArray",jsArray.toString());*/
+
+                                try {
+                                    String json = new Gson().toJson(qaList);
+                                    String serverUrl = "http://"+ serverIp +"/androidMysql/ReceieResponse.php";
+                                    SendToServerJson sendAnswerjson = new SendToServerJson(json, serverUrl);
+                                    String result = sendAnswerjson.execute().get();
+                                    Toast.makeText(getApplicationContext(),result,
+                                            Toast.LENGTH_SHORT).show();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                } catch (ExecutionException e) {
+                                    e.printStackTrace();
+                                }
+
+
 
                             }
                         })
